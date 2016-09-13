@@ -27,6 +27,25 @@ server.post('/api/messages', connector.listen());
 // Bots Dialogs
 //=========================================================
 
-bot.dialog('/', function (session) {
-    session.send("Hello World");
-});
+var recognizer = new builder.LuisRecognizer('https://api.projectoxford.ai/luis/v1/application?id=ac796f55-1f98-42e6-a069-53a34e0bbfb9&subscription-key=c378bb10282c40818fdcce7ffb865b17');
+var intents = new builder.IntentDialog({ recognizers: [recognizer] });
+bot.dialog('/', intents);
+
+intents.matches('TurnOnLightsInRoom', [
+    function (session, args, next) {
+        var task = builder.EntityRecognizer.findEntity(args.entities, 'Room');
+        if (!task) {
+            builder.Prompts.text(session, "On which room would you like to turn on the lights?");
+        } else {
+            next({ response: task.entity });
+        }
+    },
+    function (session, results) {
+        if (results.response) {
+            // ... save task
+            session.send("Ok... Added the '%s' task.", results.response);
+        } else {
+            session.send("Ok");
+        }
+    }
+]);
