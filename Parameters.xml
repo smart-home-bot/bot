@@ -1,0 +1,3 @@
+<parameters>
+  <setParameter  name="IIS Web Application Name" value="smart-home-bot-server" defaultValue="MyApp" tags="IisApp" />  
+</parameters>
