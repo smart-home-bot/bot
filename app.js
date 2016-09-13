@@ -96,8 +96,16 @@ intents.matches('GetTemperatureInRoom', [
 
 
 intents.onDefault([
-    function (session, results) {
+    function (session, args, next) {
         //session.send('Sorry, I dont understand... can you rephrase?');
         builder.Prompts.choice(session, "Sorry, I dont understand... i know how to perform these actions", actions);
+    },
+     function (session, results) {
+        if (results.response) {
+            builder.beginDialog('/',results)
+            
+        } else {
+            session.send("Sorry can't do that...");
+        }
     }
 ]);
