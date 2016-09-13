@@ -44,13 +44,54 @@ intents.matches('TurnOnLightsInRoom', [
     },
     function (session, results) {
         if (results.response) {
-            // ... light on room
+            // ... light on in room
             session.send("Turning on the lights on the '%s'.", results.response.entity);
         } else {
             session.send("Sorry can't do that...");
         }
     }
 ]);
+
+
+intents.matches('TurnOffLightsInRoom', [
+    function (session, args, next) {
+        var room = builder.EntityRecognizer.findEntity(args.entities, 'Room');
+        if (!room) {
+            builder.Prompts.choice(session, "On which room would you like to turn off the lights?", rooms);
+        } else {
+            next({ response: room.entity });
+        }
+    },
+    function (session, results) {
+        if (results.response) {
+            // ... light off in room
+            session.send("Turning on the lights off the '%s'.", results.response.entity);
+        } else {
+            session.send("Sorry can't do that...");
+        }
+    }
+]);
+
+intents.matches('GetTemperatureInRoom', [
+    function (session, args, next) {
+        var room = builder.EntityRecognizer.findEntity(args.entities, 'Room');
+        if (!room) {
+            builder.Prompts.choice(session, "On which room would you like to sample temperature?", rooms);
+        } else {
+            next({ response: room.entity });
+        }
+    },
+    function (session, results) {
+        if (results.response) {
+            // ... get temperature in room
+            session.send("Sampling temperature in room '%s'.", results.response.entity);
+        } else {
+            session.send("Sorry can't do that...");
+        }
+    }
+]);
+
+
 
 
 intents.onDefault([
