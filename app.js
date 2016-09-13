@@ -93,4 +93,10 @@ intents.matches('GetTemperatureInRoom', [
 ]);
 
 
-intents.onDefault(builder.DialogAction.send('Sorry, I dont understand... can you rephrase?'));
+
+
+intents.onDefault([
+    function (session, results) {
+        session.send('Sorry, I dont understand... can you rephrase?');
+    }
+]);
