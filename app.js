@@ -102,7 +102,7 @@ intents.onDefault([
     },
      function (session, results) {
         if (results.response) {
-            builder.beginDialog('/',results)
+            session.beginDialog('/',results)
             
         } else {
             session.send("Sorry can't do that...");
