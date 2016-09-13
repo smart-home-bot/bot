@@ -33,19 +33,19 @@ bot.dialog('/', intents);
 
 intents.matches('TurnOnLightsInRoom', [
     function (session, args, next) {
-        var task = builder.EntityRecognizer.findEntity(args.entities, 'Room');
-        if (!task) {
+        var room = builder.EntityRecognizer.findEntity(args.entities, 'Room');
+        if (!room) {
             builder.Prompts.text(session, "On which room would you like to turn on the lights?");
         } else {
-            next({ response: task.entity });
+            next({ response: room.entity });
         }
     },
     function (session, results) {
         if (results.response) {
-            // ... save task
-            session.send("Ok... Added the '%s' task.", results.response);
+            // ... light on room
+            session.send("Turning on the lights on the '%s'.", results.response);
         } else {
-            session.send("Ok");
+            session.send("Sorry cannot do that...");
         }
     }
 ]);
