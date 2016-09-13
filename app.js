@@ -32,7 +32,7 @@ var intents = new builder.IntentDialog({ recognizers: [recognizer] });
 bot.dialog('/', intents);
 
 var rooms = ["kitchen","bed room","living room","toilets","terace"];
-var actions = ["turn on the lights", "turn off the lights", "get the temperature"];
+var intents = ["turn on the lights", "turn off the lights", "get the temperature"];
 
 intents.matches('TurnOnLightsInRoom', [
     function (session, args, next) {
@@ -93,19 +93,4 @@ intents.matches('GetTemperatureInRoom', [
 ]);
 
 
-
-
-intents.onDefault([
-    function (session, args, next) {
-        //session.send('Sorry, I dont understand... can you rephrase?');
-        builder.Prompts.choice(session, "Sorry, I dont understand... i know how to perform these actions", actions);
-    },
-     function (session, results) {
-        if (results.response) {
-            session.beginDialog('/',results)
-            
-        } else {
-            session.send("Sorry can't do that...");
-        }
-    }
-]);
+intents.onDefault(builder.DialogAction.send('Sorry, I dont understand... can you rephrase?'));
