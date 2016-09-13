@@ -31,11 +31,13 @@ var recognizer = new builder.LuisRecognizer('https://api.projectoxford.ai/luis/v
 var intents = new builder.IntentDialog({ recognizers: [recognizer] });
 bot.dialog('/', intents);
 
+var rooms = ["kitchen","bed room","living room","toilets","terace"];
+
 intents.matches('TurnOnLightsInRoom', [
     function (session, args, next) {
         var room = builder.EntityRecognizer.findEntity(args.entities, 'Room');
         if (!room) {
-            builder.Prompts.choice(session, "On which room would you like to turn on the lights?","kitchen|bed room|living room|toilets|terace");
+            builder.Prompts.choice(session, "On which room would you like to turn on the lights?", rooms);
         } else {
             next({ response: room.entity });
         }
@@ -43,9 +45,9 @@ intents.matches('TurnOnLightsInRoom', [
     function (session, results) {
         if (results.response) {
             // ... light on room
-            session.send("Turning on the lights on the '%s'.", results.response);
+            session.send("Turning on the lights on the '%s'.", results.response.entity);
         } else {
-            session.send("Sorry cannot do that...");
+            session.send("Sorry can't do that...");
         }
     }
 ]);
