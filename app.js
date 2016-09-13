@@ -35,7 +35,7 @@ intents.matches('TurnOnLightsInRoom', [
     function (session, args, next) {
         var room = builder.EntityRecognizer.findEntity(args.entities, 'Room');
         if (!room) {
-            builder.Prompts.text(session, "On which room would you like to turn on the lights?");
+            builder.Prompts.choice(session, "On which room would you like to turn on the lights?","kitchen|bed room|living room|toilets|terace");
         } else {
             next({ response: room.entity });
         }
