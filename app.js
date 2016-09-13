@@ -49,3 +49,10 @@ intents.matches('TurnOnLightsInRoom', [
         }
     }
 ]);
+
+
+intents.onDefault([
+    function (session, results) {
+        session.send('Sorry, I dont understand... can you rephrase?');
+    }
+]);
