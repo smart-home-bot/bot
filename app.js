@@ -145,4 +145,8 @@ function receiveFeedback(err, receiver) {
             .text(feedbackData.Name);
         bot.send(msg);
     });
+
+    receiver.on('error', function (msg) {
+        console.log('Feedback error:' + msg);
+    });
 }
