@@ -1,9 +1,24 @@
 var appInsights = require("applicationinsights");
 appInsights.setup("2ceb0573-8643-457c-82cc-54a1a98680c0").start();
-var client = appInsights.getClient();
+var appInsightsClient = appInsights.getClient();
 
 var restify = require('restify');
-var builder = require('botbuilder');
+var botBuilder = require('botbuilder');
+
+var iotClientModule = require('azure-iothub').Client;
+var iotMessage = require('azure-iot-common').Message;
+var iotConnectionString = 'HostName=smart-home-bot.azure-devices.net;SharedAccessKeyName=service;SharedAccessKey=uSofgh7mnmRzkzDNReZf9OQ87dbtNv5XxEovN08u5so=';
+var iotTargetDevice = 'HomeIotGateway';
+var iotClient = iotClientModule.fromConnectionString(iotConnectionString);
+
+iotClient.open(function (err) {
+    if (err) {
+        console.error('Could not connect: ' + err.message);
+    } else {
+        console.log('Client connected');
+        iotClient.getFeedbackReceiver(receiveFeedback);
+    }
+});
 
 //=========================================================
 // Bot Setup
@@ -12,41 +27,49 @@ var builder = require('botbuilder');
 // Setup Restify Server
 var server = restify.createServer();
 server.listen(process.env.port || process.env.PORT || 3978, function () {
-   console.log('%s listening to %s', server.name, server.url); 
+    console.log('%s listening to %s', server.name, server.url);
 });
-  
+
 // Create chat bot
-var connector = new builder.ChatConnector({
+var connector = new botBuilder.ChatConnector({
     appId: process.env.MICROSOFT_APP_ID || '95d70bbf-09d8-4410-974d-dbad41d36c98',
     appPassword: process.env.MICROSOFT_APP_PASSWORD || 'R4Mppn5yQxoeD0efBe9TCTG'
 });
-var bot = new builder.UniversalBot(connector);
+var bot = new botBuilder.UniversalBot(connector);
 server.post('/api/messages', connector.listen());
 
 //=========================================================
 // Bots Dialogs
 //=========================================================
 
-var recognizer = new builder.LuisRecognizer('https://api.projectoxford.ai/luis/v1/application?id=ac796f55-1f98-42e6-a069-53a34e0bbfb9&subscription-key=c378bb10282c40818fdcce7ffb865b17');
-var intents = new builder.IntentDialog({ recognizers: [recognizer] });
+var recognizer = new botBuilder.LuisRecognizer('https://api.projectoxford.ai/luis/v1/application?id=ac796f55-1f98-42e6-a069-53a34e0bbfb9&subscription-key=c378bb10282c40818fdcce7ffb865b17');
+var intents = new botBuilder.IntentDialog({ recognizers: [recognizer] });
 bot.dialog('/', intents);
 
-var rooms = ["kitchen","bed room","living room","toilets","terace"];
+var rooms = ["kitchen", "bedroom", "livingroom", "toilets", "terace"];
 var actions = ["turn on the lights", "turn off the lights", "get the temperature"];
 
 intents.matches('TurnOnLightsInRoom', [
     function (session, args, next) {
-        var room = builder.EntityRecognizer.findEntity(args.entities, 'Room');
+        var room = botBuilder.EntityRecognizer.findEntity(args.entities, 'Room');
         if (!room) {
-            builder.Prompts.choice(session, "On which room would you like to turn on the lights?", rooms);
+            botBuilder.Prompts.choice(session, "On which room would you like to turn on the lights?", rooms);
         } else {
-            next({ response: room.entity });
+            next({ response: room });
         }
     },
     function (session, results) {
         if (results.response) {
             // ... light on in room
-            session.send("Turning on the lights on the '%s'.", results.response.entity);
+            var room = results.response.entity;
+            session.send("Turning on the lights on the '%s'.", room);
+            // Create a message and send it to the IoT Hub every second
+            var data = JSON.stringify({ Address: session.message.address, Name: 'TurnOnLightsInRoom', Parameters: { Room: room, TurnOn: true } });
+            var message = new iotMessage(data);
+            message.ack = 'full';
+            message.messageId = 'TurnOnLightsInRoom';
+            console.log('Sending message: ' + message.getData());
+            iotClient.send(iotTargetDevice, message, printResultFor('send'));
         } else {
             session.send("Sorry can't do that...");
         }
@@ -56,17 +79,25 @@ intents.matches('TurnOnLightsInRoom', [
 
 intents.matches('TurnOffLightsInRoom', [
     function (session, args, next) {
-        var room = builder.EntityRecognizer.findEntity(args.entities, 'Room');
+        var room = botBuilder.EntityRecognizer.findEntity(args.entities, 'Room');
         if (!room) {
-            builder.Prompts.choice(session, "On which room would you like to turn off the lights?", rooms);
+            botBuilder.Prompts.choice(session, "On which room would you like to turn off the lights?", rooms);
         } else {
-            next({ response: room.entity });
+            next({ response: room });
         }
     },
     function (session, results) {
         if (results.response) {
             // ... light off in room
-            session.send("Turning on the lights off the '%s'.", results.response.entity);
+            var room = results.response.entity;
+            session.send("Turning off the lights on the '%s'.", room);
+            // Create a message and send it to the IoT Hub every second
+            var data = JSON.stringify({ Address: session.message.address, Name: 'TurnOffLightsInRoom', Parameters: { Room: room, TurnOn: false } });
+            var message = new iotMessage(data);
+            message.ack = 'full';
+            message.messageId = 'TurnOffLightsInRoom';
+            console.log('Sending message: ' + message.getData());
+            iotClient.send(iotTargetDevice, message, printResultFor('send'));
         } else {
             session.send("Sorry can't do that...");
         }
@@ -75,9 +106,9 @@ intents.matches('TurnOffLightsInRoom', [
 
 intents.matches('GetTemperatureInRoom', [
     function (session, args, next) {
-        var room = builder.EntityRecognizer.findEntity(args.entities, 'Room');
+        var room = botBuilder.EntityRecognizer.findEntity(args.entities, 'Room');
         if (!room) {
-            builder.Prompts.choice(session, "On which room would you like to sample temperature?", rooms);
+            botBuilder.Prompts.choice(session, "On which room would you like to sample temperature?", rooms);
         } else {
             next({ response: room.entity });
         }
@@ -95,4 +126,23 @@ intents.matches('GetTemperatureInRoom', [
 
 
 
-intents.onDefault(builder.DialogAction.send('Sorry, I dont understand... can you rephrase?'));
+intents.onDefault(botBuilder.DialogAction.send('Sorry, I dont understand... can you rephrase?'));
+
+function printResultFor(op) {
+    return function printResult(err, res) {
+        if (err) console.log(op + ' error: ' + err.toString());
+        if (res) console.log(op + ' status: ' + res.constructor.name);
+    };
+}
+
+function receiveFeedback(err, receiver) {
+    receiver.on('message', function (msg) {
+        console.log('Feedback message:');
+        var feedbackData = msg.getData();
+        console.log(feedbackData.toString('utf-8'));
+        var msg = new botBuilder.Message()
+            .address(feedbackData.Address)
+            .text(feedbackData.Name);
+        bot.send(msg);
+    });
+}
