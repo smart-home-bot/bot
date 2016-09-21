@@ -1,5 +1,5 @@
 var appInsights = require("applicationinsights");
-appInsights.setup("2ceb0573-8643-457c-82cc-54a1a98680c0").start();
+appInsights.setup(process.env.APPINSIGHTS_INSTRUMENTATIONKEY).start();
 var appInsightsClient = appInsights.getClient();
 
 var restify = require('restify');
@@ -7,7 +7,8 @@ var botBuilder = require('botbuilder');
 
 var iotClientModule = require('azure-iothub').Client;
 var iotMessage = require('azure-iot-common').Message;
-var iotConnectionString = 'HostName=smart-home-bot.azure-devices.net;SharedAccessKeyName=service;SharedAccessKey=uSofgh7mnmRzkzDNReZf9OQ87dbtNv5XxEovN08u5so=';
+var iotConnectionString = process.env.IOTHUB_CONNECTION_STRING || 'HostName=smart-home-bot.azure-devices.net;SharedAccessKeyName=service;SharedAccessKey=uSofgh7mnmRzkzDNReZf9OQ87dbtNv5XxEovN08u5so=';
+
 var iotTargetDevice = 'HomeIotGateway';
 var iotClient = iotClientModule.fromConnectionString(iotConnectionString);
 

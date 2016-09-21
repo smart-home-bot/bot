@@ -16,7 +16,10 @@
             ],
             "env": {
                 "NODE_ENV": "development",
-                "APPINSIGHTS_INSTRUMENTATIONKEY":123
+                "APPINSIGHTS_INSTRUMENTATIONKEY":"2ceb0573-8643-457c-82cc-54a1a98680c0",
+                "IOTHUB_CONNECTION_STRING": "HostName=smart-home-bot.azure-devices.net;SharedAccessKeyName=service;SharedAccessKey=uSofgh7mnmRzkzDNReZf9OQ87dbtNv5XxEovN08u5so=",
+                "MICROSOFT_APP_ID": "95d70bbf-09d8-4410-974d-dbad41d36c98",
+                "MICROSOFT_APP_PASSWORD": "R4Mppn5yQxoeD0efBe9TCTG"
             },
             "console": "internalConsole",
             "sourceMaps": false,
