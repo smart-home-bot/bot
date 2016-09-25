@@ -47,7 +47,7 @@ var recognizer = new botBuilder.LuisRecognizer('https://api.projectoxford.ai/lui
 var intents = new botBuilder.IntentDialog({ recognizers: [recognizer] });
 bot.dialog('/', intents);
 
-var rooms = ['kitchen', 'terace', 'livingroom', "boy's room", 'bedroom', 'bathroom', "girl's room", "all"];
+var rooms = ['kitchen', 'terrace', 'livingroom', "boy's room", 'bedroom', 'bathroom', "girl's room", "all"];
 var actions = ["turn on the lights", "turn off the lights", "get the temperature"];
 
 intents.matches('TurnOnLightsInRoom', [
@@ -63,7 +63,7 @@ intents.matches('TurnOnLightsInRoom', [
         if (results.response) {
             // ... light on in room
             var room = results.response.entity;
-            if (roo == 'all') {
+            if (room == 'all') {
                 session.send("Turning all the lights on.");
             }
             else {
