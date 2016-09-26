@@ -88,7 +88,7 @@ setInterval(function () {
         }
     })
 
-}, 5000);
+}, 40000);
 
 
 intents.matches('SetCurrentTime', [
