@@ -2,6 +2,12 @@ var appInsights = require("applicationinsights");
 appInsights.setup(process.env.APPINSIGHTS_INSTRUMENTATIONKEY).start();
 var appInsightsClient = appInsights.getClient();
 
+var request = require('request');
+var currentTime = '1400';
+var clientSession;
+
+var lightsSuggest = false;
+
 var restify = require('restify');
 var botBuilder = require('botbuilder');
 
@@ -47,8 +53,54 @@ var recognizer = new botBuilder.LuisRecognizer('https://api.projectoxford.ai/lui
 var intents = new botBuilder.IntentDialog({ recognizers: [recognizer] });
 bot.dialog('/', intents);
 
+bot.dialog('/lightsSuggest', [
+    function (session) {
+        botBuilder.Prompts.choice(session, 'twilight will start soon, whould you like to turn on the lights?',['yes','no']);
+    },
+    function (session, results) {
+        var answer = results.response.entity;
+        if (answer =='yes'){
+            session.send("Okay, turning all the lights on for you");
+            
+            // Create a message and send it to the IoT Hub every second
+            var data = JSON.stringify({ Address: session.message.address, Name: 'TurnOnLightsInRoom', Parameters: { Room: 'all', TurnOn: true } });
+            var message = new iotMessage(data);
+            message.ack = 'full';
+            message.messageId = 'TurnOnLightsInRoom';
+            console.log('Sending message: ' + message.getData());
+            iotClient.send(iotTargetDevice, message, printResultFor('send'));
+        }
+        session.endDialog();
+    }
+]);
+
 var rooms = ['kitchen', 'terrace', 'livingroom', "boy's room", 'bedroom', 'bathroom', "girl's room", "all"];
 var actions = ["turn on the lights", "turn off the lights", "get the temperature"];
+
+setInterval(function () {
+
+    request('http://botmlservice.azurewebsites.net/api/lights/kitchen/' + currentTime, function (error, response, body) {
+        if (!error && response.statusCode == 200) {
+            if (body=='true' && clientSession && !lightsSuggest) {
+                clientSession.beginDialog('/lightsSuggest');
+                lightsSuggest = true;
+            }
+        }
+    })
+
+}, 5000);
+
+
+intents.matches('SetCurrentTime', [
+    function (session, args, next) {
+        var timeObj = botBuilder.EntityRecognizer.findEntity(args.entities, 'Time');
+        var time = timeObj.entity.replace(/[ :]/g,"");
+        session.send("setting time to '%s'", time);
+        currentTime = time;
+        clientSession = session;
+        lightsSuggest = false;
+    }
+]);
 
 intents.matches('TurnOnLightsInRoom', [
     function (session, args, next) {
@@ -96,7 +148,7 @@ intents.matches('TurnOffLightsInRoom', [
         if (results.response) {
             // ... light off in room
             var room = results.response.entity;
-            if (room == 'all'){
+            if (room == 'all') {
                 session.send("Turning all the lights off.");
             }
             else {
