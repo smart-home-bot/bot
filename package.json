@@ -27,10 +27,10 @@
     "applicationinsights": "^0.15.19",
     "botbuilder": "^3.2.3",
     "restify": "^4.1.1",
-    "azure-iothub":"^1.0.16",
-    "azure-iot-device-amqp-ws":"^1.0.15",
-    "azure-iot-device-amqp": "1.0.14",
-    "azure-iot-common":"^1.0.14",
+    "azure-iothub": "^1.0.17",
+    "azure-iot-device-amqp-ws": "^1.0.16",
+    "azure-iot-device-amqp": "^1.0.15",
+    "azure-iot-common": "^1.0.15",
     "request": "^2.75.0"
   }
 }

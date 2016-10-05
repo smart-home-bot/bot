@@ -63,8 +63,9 @@ bot.dialog('/lightsSuggest', [
             session.send("Okay, turning all the lights on for you");
             
             // Create a message and send it to the IoT Hub every second
-            var data = JSON.stringify({ Address: session.message.address, Name: 'TurnOnLightsInRoom', Parameters: { Room: 'all', TurnOn: true } });
+            var data = JSON.stringify({Name: 'TurnOnLightsInRoom', Parameters: { Room: 'all', TurnOn: true } });
             var message = new iotMessage(data);
+            message.properties.add("Address", JSON.stringify(session.message.address));
             message.ack = 'full';
             message.messageId = 'TurnOnLightsInRoom';
             console.log('Sending message: ' + message.getData());
@@ -122,8 +123,9 @@ intents.matches('TurnOnLightsInRoom', [
                 session.send("Turning on the lights on the '%s'.", room);
             }
             // Create a message and send it to the IoT Hub every second
-            var data = JSON.stringify({ Address: session.message.address, Name: 'TurnOnLightsInRoom', Parameters: { Room: room, TurnOn: true } });
+            var data = JSON.stringify({ Name: 'TurnOnLightsInRoom', Parameters: { Room: room, TurnOn: true } });
             var message = new iotMessage(data);
+            message.properties.add("Address", JSON.stringify(session.message.address));
             message.ack = 'full';
             message.messageId = 'TurnOnLightsInRoom';
             console.log('Sending message: ' + message.getData());
@@ -155,8 +157,9 @@ intents.matches('TurnOffLightsInRoom', [
                 session.send("Turning off the lights on the '%s'.", room);
             }
             // Create a message and send it to the IoT Hub every second
-            var data = JSON.stringify({ Address: session.message.address, Name: 'TurnOffLightsInRoom', Parameters: { Room: room, TurnOn: false } });
+            var data = JSON.stringify({Name: 'TurnOffLightsInRoom', Parameters: { Room: room, TurnOn: false } });
             var message = new iotMessage(data);
+            message.properties.add("Address", JSON.stringify(session.message.address));
             message.ack = 'full';
             message.messageId = 'TurnOffLightsInRoom';
             console.log('Sending message: ' + message.getData());
@@ -202,10 +205,11 @@ function receiveFeedback(err, receiver) {
     receiver.on('message', function (msg) {
         console.log('Feedback message:');
         var feedbackData = msg.getData();
+        var msgObj = JSON.parse(feedbackData.toString('utf-8'))[0];
         console.log(feedbackData.toString('utf-8'));
         var msg = new botBuilder.Message()
-            .address(feedbackData.Address)
-            .text(feedbackData.Name);
+            .address(msgObj.Address)
+            .text(msgObj.Name);
         bot.send(msg);
     });
 
