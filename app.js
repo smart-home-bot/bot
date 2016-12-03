@@ -62,12 +62,12 @@ bot.dialog('/lightsSuggest', [
         if (answer =='yes'){
             session.send("Okay, turning all the lights on for you");
             
-            // Create a message and send it to the IoT Hub every second
-            var data = JSON.stringify({Name: 'TurnOnLightsInRoom', Parameters: { Room: 'all', TurnOn: true } });
+            // Create a message and send it to the IoT Hub
+            var data = JSON.stringify({Name: 'TurnLightsInRoom', Parameters: { Room: 'all', TurnOn: true } });
             var message = new iotMessage(data);
             message.properties.add("Address", JSON.stringify(session.message.address));
             message.ack = 'full';
-            message.messageId = 'TurnOnLightsInRoom';
+            message.messageId = 'TurnLightsInRoom';
             console.log('Sending message: ' + message.getData());
             iotClient.send(iotTargetDevice, message, printResultFor('send'));
         }
@@ -122,12 +122,12 @@ intents.matches('TurnOnLightsInRoom', [
             else {
                 session.send("Turning on the lights on the '%s'.", room);
             }
-            // Create a message and send it to the IoT Hub every second
-            var data = JSON.stringify({ Name: 'TurnOnLightsInRoom', Parameters: { Room: room, TurnOn: true } });
+            // Create a message and send it to the IoT Hub
+            var data = JSON.stringify({ Name: 'TurnLightsInRoom', Parameters: { Room: room, TurnOn: true } });
             var message = new iotMessage(data);
             message.properties.add("Address", JSON.stringify(session.message.address));
             message.ack = 'full';
-            message.messageId = 'TurnOnLightsInRoom';
+            message.messageId = 'TurnLightsInRoom';
             console.log('Sending message: ' + message.getData());
             iotClient.send(iotTargetDevice, message, printResultFor('send'));
         } else {
@@ -156,12 +156,48 @@ intents.matches('TurnOffLightsInRoom', [
             else {
                 session.send("Turning off the lights on the '%s'.", room);
             }
-            // Create a message and send it to the IoT Hub every second
-            var data = JSON.stringify({Name: 'TurnOffLightsInRoom', Parameters: { Room: room, TurnOn: false } });
+            // Create a message and send it to the IoT Hub
+            var data = JSON.stringify({Name: 'TurnLightsInRoom', Parameters: { Room: room, TurnOn: false } });
             var message = new iotMessage(data);
             message.properties.add("Address", JSON.stringify(session.message.address));
             message.ack = 'full';
-            message.messageId = 'TurnOffLightsInRoom';
+            message.messageId = 'TurnLightsInRoom';
+            console.log('Sending message: ' + message.getData());
+            iotClient.send(iotTargetDevice, message, printResultFor('send'));
+        } else {
+            session.send("Sorry can't do that...");
+        }
+    }
+]);
+
+
+intents.matches('TurnAC', [
+    function (session, args, next) {
+        var state = botBuilder.EntityRecognizer.findEntity(args.entities, 'State');
+        if (!state) {
+            botBuilder.Prompts.choice(session, "Should I turn AC on or off?", ["on","off"]);
+        } else {
+            next({ response: state });
+        }
+    },
+    function (session, results) {
+        if (results.response) {
+            // ... ac on / off
+            var state = results.response.entity;
+            var stateBool = false;
+            if (state == 'on') {
+                session.send("Turning AC on.");
+                stateBool = true;
+            }
+            else {
+                session.send("Turning AC off");
+            }
+            // Create a message and send it to the IoT Hub
+            var data = JSON.stringify({ Name: 'TurnAC', Parameters: { TurnOn: stateBool } });
+            var message = new iotMessage(data);
+            message.properties.add("Address", JSON.stringify(session.message.address));
+            message.ack = 'full';
+            message.messageId = 'TurnAC';
             console.log('Sending message: ' + message.getData());
             iotClient.send(iotTargetDevice, message, printResultFor('send'));
         } else {
