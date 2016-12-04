@@ -49,21 +49,21 @@ server.post('/api/messages', connector.listen());
 // Bots Dialogs
 //=========================================================
 
-var recognizer = new botBuilder.LuisRecognizer('https://api.projectoxford.ai/luis/v1/application?id=ac796f55-1f98-42e6-a069-53a34e0bbfb9&subscription-key=c378bb10282c40818fdcce7ffb865b17');
+var recognizer = new botBuilder.LuisRecognizer('https://api.projectoxford.ai/luis/v2.0/apps/ac796f55-1f98-42e6-a069-53a34e0bbfb9?subscription-key=f73dec2a56024cf389e417b50d7d594a&verbose=true');
 var intents = new botBuilder.IntentDialog({ recognizers: [recognizer] });
 bot.dialog('/', intents);
 
 bot.dialog('/lightsSuggest', [
     function (session) {
-        botBuilder.Prompts.choice(session, 'twilight will start soon, whould you like to turn on the lights?',['yes','no']);
+        botBuilder.Prompts.choice(session, 'twilight will start soon, whould you like to turn on the lights?', ['yes', 'no']);
     },
     function (session, results) {
         var answer = results.response.entity;
-        if (answer =='yes'){
+        if (answer == 'yes') {
             session.send("Okay, turning all the lights on for you");
-            
+
             // Create a message and send it to the IoT Hub
-            var data = JSON.stringify({Name: 'TurnLightsInRoom', Parameters: { Room: 'all', TurnOn: true } });
+            var data = JSON.stringify({ Name: 'TurnLightsInRoom', Parameters: { Room: 'all', TurnOn: true } });
             var message = new iotMessage(data);
             message.properties.add("Address", JSON.stringify(session.message.address));
             message.ack = 'full';
@@ -82,7 +82,7 @@ setInterval(function () {
 
     request('http://botmlservice.azurewebsites.net/api/lights/kitchen/' + currentTime, function (error, response, body) {
         if (!error && response.statusCode == 200) {
-            if (body=='true' && clientSession && !lightsSuggest) {
+            if (body == 'true' && clientSession && !lightsSuggest) {
                 clientSession.beginDialog('/lightsSuggest');
                 lightsSuggest = true;
             }
@@ -95,7 +95,7 @@ setInterval(function () {
 intents.matches('SetCurrentTime', [
     function (session, args, next) {
         var timeObj = botBuilder.EntityRecognizer.findEntity(args.entities, 'Time');
-        var time = timeObj.entity.replace(/[ :]/g,"");
+        var time = timeObj.entity.replace(/[ :]/g, "");
         session.send("setting time to '%s'", time);
         currentTime = time;
         clientSession = session;
@@ -157,7 +157,7 @@ intents.matches('TurnOffLightsInRoom', [
                 session.send("Turning off the lights on the '%s'.", room);
             }
             // Create a message and send it to the IoT Hub
-            var data = JSON.stringify({Name: 'TurnLightsInRoom', Parameters: { Room: room, TurnOn: false } });
+            var data = JSON.stringify({ Name: 'TurnLightsInRoom', Parameters: { Room: room, TurnOn: false } });
             var message = new iotMessage(data);
             message.properties.add("Address", JSON.stringify(session.message.address));
             message.ack = 'full';
@@ -171,38 +171,31 @@ intents.matches('TurnOffLightsInRoom', [
 ]);
 
 
-intents.matches('TurnAC', [
+intents.matches('TurnOnAC', [
     function (session, args, next) {
-        var state = botBuilder.EntityRecognizer.findEntity(args.entities, 'State');
-        if (!state) {
-            botBuilder.Prompts.choice(session, "Should I turn AC on or off?", ["on","off"]);
-        } else {
-            next({ response: state });
-        }
-    },
-    function (session, results) {
-        if (results.response) {
-            // ... ac on / off
-            var state = results.response.entity;
-            var stateBool = false;
-            if (state == 'on') {
-                session.send("Turning AC on.");
-                stateBool = true;
-            }
-            else {
-                session.send("Turning AC off");
-            }
-            // Create a message and send it to the IoT Hub
-            var data = JSON.stringify({ Name: 'TurnAC', Parameters: { TurnOn: stateBool } });
-            var message = new iotMessage(data);
-            message.properties.add("Address", JSON.stringify(session.message.address));
-            message.ack = 'full';
-            message.messageId = 'TurnAC';
-            console.log('Sending message: ' + message.getData());
-            iotClient.send(iotTargetDevice, message, printResultFor('send'));
-        } else {
-            session.send("Sorry can't do that...");
-        }
+        session.send("Turning AC on.");
+        // Create a message and send it to the IoT Hub
+        var data = JSON.stringify({ Name: 'TurnAC', Parameters: { TurnOn: true } });
+        var message = new iotMessage(data);
+        message.properties.add("Address", JSON.stringify(session.message.address));
+        message.ack = 'full';
+        message.messageId = 'TurnAC';
+        console.log('Sending message: ' + message.getData());
+        iotClient.send(iotTargetDevice, message, printResultFor('send'));
+    }
+]);
+
+intents.matches('TurnOffAC', [
+    function (session, args, next) {
+        session.send("Turning AC off.");
+        // Create a message and send it to the IoT Hub
+        var data = JSON.stringify({ Name: 'TurnAC', Parameters: { TurnOn: false } });
+        var message = new iotMessage(data);
+        message.properties.add("Address", JSON.stringify(session.message.address));
+        message.ack = 'full';
+        message.messageId = 'TurnAC';
+        console.log('Sending message: ' + message.getData());
+        iotClient.send(iotTargetDevice, message, printResultFor('send'));
     }
 ]);
 
