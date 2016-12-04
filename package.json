@@ -23,6 +23,7 @@
     "url": "https://github.com/guybartal/armbot/issues"
   },
   "homepage": "https://github.com/guybartal/armbot#readme",
+  "engines":{"node": "4.4.7", "npm": "3.10.5"},
   "dependencies": {
     "applicationinsights": "^0.15.19",
     "botbuilder": "^3.2.3",
