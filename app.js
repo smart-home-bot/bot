@@ -45,6 +45,24 @@ var connector = new botBuilder.ChatConnector({
 var bot = new botBuilder.UniversalBot(connector);
 server.post('/api/messages', connector.listen());
 
+server.post('/api/turnac', function (req, res, next) {
+    if (req.headers.appPassword == connector.appPassword) {
+        // Create a message and send it to the IoT Hub
+        var data = JSON.stringify({ Name: 'TurnAC', Parameters: { TurnOn: true } });
+        var message = new iotMessage(data);
+        message.ack = 'full';
+        message.messageId = 'TurnAC';
+        console.log('Sending message: ' + message.getData());
+        iotClient.send(iotTargetDevice, message, printResultFor('send'));
+        res.send(200, "AC turned on");
+    } else {
+        res.send(401, "unauthorized access");
+    }
+    return next();
+
+});
+
+
 //=========================================================
 // Bots Dialogs
 //=========================================================
